@@ -56,6 +56,11 @@ export interface Transport {
    * Temp queues should be deleted
    */
   dispose(): Promise<void>
+
+  /**
+   * Waits for until transport will be fully dispposed
+   */
+  disposed(): Promise<void>
 }
 
 export interface TransportMessage {

@@ -46,6 +46,8 @@ export abstract class TransportBase implements Transport {
   private rawHandlers = new Map<string, Set<RawHandler>>()
   private registeredPrefixes = new Set<string>()
   private listenCallbacks = new Map<string, ListenResponseCallback>()
+  private disposedPromise: Promise<any>
+  private disposedResolve?: (value: any) => void
 
   private _state: TransportState
   get state(): TransportState {
@@ -57,6 +59,10 @@ export abstract class TransportBase implements Transport {
     protected utils: TransportUtils,
   ) {
     this._state = TransportState.STOPPED
+
+    this.disposedPromise = new Promise(resolve => {
+      this.disposedResolve = resolve
+    })
   }
 
   abstract init(): Promise<void>
@@ -251,6 +257,14 @@ export abstract class TransportBase implements Transport {
     this.prefixHandlers.clear()
     this.listenCallbacks.clear()
     this.registeredPrefixes.clear()
+
+    if (this.disposedResolve) {
+      this.disposedResolve(null)
+    }
+  }
+
+  async disposed() {
+    return this.disposedPromise
   }
 
   protected async processMessage(msg: TransportMessage) {
